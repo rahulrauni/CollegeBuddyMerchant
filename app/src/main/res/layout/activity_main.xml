@@ -6,16 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/tv_no_cards"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:lottie_fileName="loadinganim.json"
-        app:lottie_loop="true"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="5dp"
-        app:lottie_autoPlay="true" />
-
 
     <FrameLayout
         android:padding="5dp"
@@ -23,33 +13,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/my_recycler_view"
-            android:scrollbars="vertical"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"/>
-
-
     </FrameLayout>
-    <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/no_data"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/nav_bar"
         android:layout_width="match_parent"
-        app:lottie_fileName="no_order.json"
-        android:layout_height="match_parent"
-        android:foregroundGravity="center"
-        android:visibility="gone"
-        app:lottie_loop="true"
-        app:lottie_autoPlay="true"/>
-
-
-
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"/>
+        android:layout_alignParentStart="true"
+        app:menu="@menu/nav_bar_menu"/>
+
 
 
 </RelativeLayout>
