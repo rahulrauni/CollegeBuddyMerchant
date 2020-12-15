@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -182,11 +181,11 @@ public class HomeFrag extends Fragment {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             holder.productName.setText(productNames.get(position));
             holder.quantity.setText("Quantity: " + quantities.get(position));
-            holder.status.setText("Status: "+ statuses.get(position));
-            holder.price.setText("Rs. "+prices.get(position));
-            holder.mrp.setText(mrps.get(position));
-            holder.discount.setText(discounts.get(position)+"% off");
-            holder.orderNo.setText(orderIds.get(position));
+            //holder.status.setText("Status: "+ statuses.get(position));
+            //holder.price.setText("Rs. "+prices.get(position));
+            //holder.mrp.setText(mrps.get(position));
+            //holder.discount.setText(discounts.get(position)+"% off");
+            //holder.orderNo.setText(orderIds.get(position));
         }
 
         @Override
