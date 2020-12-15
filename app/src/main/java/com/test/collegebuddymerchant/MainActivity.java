@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private HomeFrag homeFrag;
     private OrdersFrag ordersFrag;
     private ProfileFrag profileFrag;
+    private PackedOrderFrag packedOrderFrag;
 
 
 
@@ -60,28 +61,15 @@ public class MainActivity extends AppCompatActivity {
 
         frame=findViewById(R.id.frame_container);
         nav_bar=findViewById(R.id.nav_bar);
+        nav_bar.setItemBackgroundResource(R.color.design_default_color_secondary);
         homeFrag=new HomeFrag();
         ordersFrag=new OrdersFrag();
         profileFrag= new ProfileFrag();
-        setFragment(homeFrag);
-        nav_bar.setOnNavigationItemReselectedListener(new BottomNavigationView.OnNavigationItemReselectedListener() {
-            @Override
-            public void onNavigationItemReselected(@NonNull MenuItem item) {
-                switch (item.getItemId()){
-                    case R.id.nav_home :
-                        nav_bar.setItemBackgroundResource(R.color.design_default_color_primary);
-                        setFragment(homeFrag);
-                    case R.id.nav_orders:
-                        nav_bar.setItemBackgroundResource(R.color.design_default_color_secondary);
-                        setFragment(ordersFrag);
-                    case R.id.nav_profile:
-                        nav_bar.setItemBackgroundResource(R.color.authui_colorPrimaryDark);
-                        setFragment(profileFrag);
+        packedOrderFrag=new PackedOrderFrag();
 
-                    default:
-                }
-            }
-        });
+
+
+        setFragment(homeFrag);
 
 
         nav_bar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -89,15 +77,19 @@ public class MainActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()){
                     case R.id.nav_home :
-                        nav_bar.setItemBackgroundResource(R.color.design_default_color_primary);
+                        //nav_bar.setItemBackgroundResource(R.color.design_default_color_secondary);
                         setFragment(homeFrag);
                         return true;
+                    case R.id.nav_packed:
+                        //nav_bar.setItemBackgroundResource(R.color.design_default_color_secondary);
+                        setFragment(packedOrderFrag);
+                        return true;
                     case R.id.nav_orders:
-                        nav_bar.setItemBackgroundResource(R.color.design_default_color_secondary);
+                        //nav_bar.setItemBackgroundResource(R.color.design_default_color_secondary);
                         setFragment(ordersFrag);
                         return true;
                     case R.id.nav_profile:
-                        nav_bar.setItemBackgroundResource(R.color.authui_colorPrimaryDark);
+                      //  nav_bar.setItemBackgroundResource(R.color.design_default_color_secondary);
                         setFragment(profileFrag);
                         return true;
 
