@@ -16,12 +16,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -43,6 +47,7 @@ public class HomeFrag extends Fragment {
     Boolean isScrolling = false;
     LottieAnimationView noData;
     String cityName,collegeName,loginId;
+    DocumentReference stausref;
 
 
 
@@ -59,6 +64,7 @@ public class HomeFrag extends Fragment {
         mRecyclerView = v.findViewById(R.id.my_recycler_view);
         tv_no_item = v.findViewById(R.id.tv_no_cards);
         noData =  v.findViewById(R.id.no_data);
+        stausref = db.collection(cityName).document(collegeName);
 //        if (mRecyclerView != null) {
 //            //to enable optimization of recyclerview
 //
@@ -67,7 +73,7 @@ public class HomeFrag extends Fragment {
         lastDocumentSnapshot=null;
         manager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(manager);
-        OrderAdapter myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
+        OrderAdapter myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
         mRecyclerView.setAdapter(myAdapter);
         LoadData();
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -113,6 +119,7 @@ public class HomeFrag extends Fragment {
                     if (tv_no_item.getVisibility() == View.VISIBLE) {
                         tv_no_item.setVisibility(View.GONE);
                     }
+                    String key = documentSnapshot.getId();
                     noData.setVisibility(View.GONE);
                     String productName = documentSnapshot.getString("productName");
                     String quantity = documentSnapshot.getString("quantity");
@@ -122,7 +129,7 @@ public class HomeFrag extends Fragment {
                     String discount = documentSnapshot.getString("discount");
                     String productImage = documentSnapshot.getString("productImage");
                     String orderId = documentSnapshot.getString("orderId");
-                    ((OrderAdapter)mRecyclerView.getAdapter()).update(productName,quantity,status,price,mrp,discount,productImage, orderId);
+                    ((OrderAdapter)mRecyclerView.getAdapter()).update(key,productName,quantity,status,price,mrp,discount,productImage, orderId);
                     Log.e("details",productName+quantity+price);
 
                     //quantity-copies,
@@ -134,6 +141,7 @@ public class HomeFrag extends Fragment {
     private class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder>{
         RecyclerView recyclerView;
         Context context;
+        ArrayList<String> productKeys=new ArrayList<>();
         ArrayList<String> productNames=new ArrayList<>();
         ArrayList<String>  quantities= new ArrayList<>();
         ArrayList<String>  statuses= new ArrayList<>();
@@ -143,7 +151,8 @@ public class HomeFrag extends Fragment {
         ArrayList<String> productImages= new ArrayList<>();
         ArrayList<String> orderIds= new ArrayList<>();
 
-        public void update(String productName, String quantity, String status, String price, String mrp, String discount, String productImage, String orderId){
+        public void update(String key,String productName, String quantity, String status, String price, String mrp, String discount, String productImage, String orderId){
+            productKeys.add(key);
             productNames.add(productName);
             quantities.add(quantity);
             statuses.add(status);
@@ -157,9 +166,10 @@ public class HomeFrag extends Fragment {
 
         }
 
-        public OrderAdapter(RecyclerView recyclerView, Context context, ArrayList<String> productNames, ArrayList<String> quantities, ArrayList<String> statuses, ArrayList<String> prices, ArrayList<String> mrps, ArrayList<String> discounts,ArrayList<String> productImages, ArrayList<String> orderIds) {
+        public OrderAdapter(RecyclerView recyclerView, Context context, ArrayList<String> productKeys,ArrayList<String> productNames, ArrayList<String> quantities, ArrayList<String> statuses, ArrayList<String> prices, ArrayList<String> mrps, ArrayList<String> discounts,ArrayList<String> productImages, ArrayList<String> orderIds) {
             this.recyclerView = recyclerView;
             this.context = context;
+            this.productKeys = productKeys;
             this.productNames = productNames;
             this.quantities = quantities;
             this.statuses = statuses;
@@ -181,6 +191,22 @@ public class HomeFrag extends Fragment {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             holder.productName.setText(productNames.get(position));
             holder.quantity.setText("Quantity: " + quantities.get(position));
+            holder.confirm_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    stausref.collection("productOrders").document(productKeys.get(position)).update("status","Dispatched")
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if(task.isSuccessful()){
+                                        Toast.makeText(getContext(), "Order Sucessfully marked Packed", Toast.LENGTH_SHORT).show();
+                                    }else{
+                                        Toast.makeText(getContext(), "Server Error", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
+                }
+            });
             //holder.status.setText("Status: "+ statuses.get(position));
             //holder.price.setText("Rs. "+prices.get(position));
             //holder.mrp.setText(mrps.get(position));
@@ -196,6 +222,7 @@ public class HomeFrag extends Fragment {
         public class ViewHolder extends RecyclerView.ViewHolder {
             TextView quantity, status, productName, price, mrp, discount, orderNo;
             ImageView productImage;
+            Button confirm_button,cancel_button;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -208,19 +235,8 @@ public class HomeFrag extends Fragment {
                 discount= itemView.findViewById(R.id.discount);
                 productImage = itemView.findViewById(R.id.productimage);
                 orderNo = itemView.findViewById(R.id.orderid);
-                itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        int position = recyclerView.getChildAdapterPosition(view);
-                        Intent intent = new Intent(getActivity(), IndividualProduct.class);
-                        intent.putExtra("productNames", productNames.get(position));
-                        intent.putExtra("quantities",quantities.get(position));
-                        intent.putExtra("prices",prices.get(position));
-                        intent.putExtra("mrp",mrps.get(position));
-                        intent.putExtra("discounts",discounts.get(position));
-                        startActivity(intent);
-                    }
-                });
+                confirm_button= itemView.findViewById(R.id.confirmButton);
+                cancel_button = itemView.findViewById(R.id.cancelButton);
             }
         }
     }
