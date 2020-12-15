@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,17 +40,12 @@ public class HomeFrag extends Fragment {
     int totalItems, scrolledOutItems;
     private LinearLayoutManager manager;
     Query query;
-
     private DocumentSnapshot lastDocumentSnapshot;
     Boolean isScrolling = false;
     LottieAnimationView noData;
     String cityName,collegeName,loginId;
 
-//    @Override
-//    public void onCreate(@Nullable Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        LoadData();
-//    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -64,11 +60,12 @@ public class HomeFrag extends Fragment {
         mRecyclerView = v.findViewById(R.id.my_recycler_view);
         tv_no_item = v.findViewById(R.id.tv_no_cards);
         noData =  v.findViewById(R.id.no_data);
-        if (mRecyclerView != null) {
-            //to enable optimization of recyclerview
-            mRecyclerView.setHasFixedSize(true);
-        }
-
+//        if (mRecyclerView != null) {
+//            //to enable optimization of recyclerview
+//
+//        }
+        mRecyclerView.setHasFixedSize(true);
+        lastDocumentSnapshot=null;
         manager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(manager);
         OrderAdapter myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
@@ -127,6 +124,8 @@ public class HomeFrag extends Fragment {
                     String productImage = documentSnapshot.getString("productImage");
                     String orderId = documentSnapshot.getString("orderId");
                     ((OrderAdapter)mRecyclerView.getAdapter()).update(productName,quantity,status,price,mrp,discount,productImage, orderId);
+                    Log.e("details",productName+quantity+price);
+
                     //quantity-copies,
                 }
             }
@@ -155,6 +154,8 @@ public class HomeFrag extends Fragment {
             productImages.add(productImage);
             orderIds.add(orderId);
             notifyDataSetChanged();  //refershes the recyler view automatically...
+            Log.e("details2",productName+quantity+price);
+
         }
 
         public OrderAdapter(RecyclerView recyclerView, Context context, ArrayList<String> productNames, ArrayList<String> quantities, ArrayList<String> statuses, ArrayList<String> prices, ArrayList<String> mrps, ArrayList<String> discounts,ArrayList<String> productImages, ArrayList<String> orderIds) {
@@ -224,5 +225,6 @@ public class HomeFrag extends Fragment {
             }
         }
     }
+
 
 }
