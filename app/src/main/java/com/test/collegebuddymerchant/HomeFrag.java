@@ -1,6 +1,8 @@
 package com.test.collegebuddymerchant;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Paint;
@@ -194,17 +196,29 @@ public class HomeFrag extends Fragment {
             holder.confirm_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    stausref.collection("productOrders").document(productKeys.get(position)).update("status","Dispatched")
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+
+
+                    AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+                    builder.setMessage("Are You Sure").
+                            setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                 @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if(task.isSuccessful()){
-                                        Toast.makeText(getContext(), "Order Sucessfully marked Packed", Toast.LENGTH_SHORT).show();
-                                    }else{
-                                        Toast.makeText(getContext(), "Server Error", Toast.LENGTH_SHORT).show();
-                                    }
+                                public void onClick(DialogInterface dialog, int which) {
+                                    stausref.collection("productOrders").document(productKeys.get(position)).update("status","Dispatched")
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if(task.isSuccessful()){
+                                                        Toast.makeText(getContext(), "Order Sucessfully marked Packed", Toast.LENGTH_SHORT).show();
+                                                    }else{
+                                                        Toast.makeText(getContext(), "Server Error", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                            });
                                 }
-                            });
+                            }).setNegativeButton("Cancel",null);
+                    AlertDialog alert=builder.create();
+                    alert.show();
+
                 }
             });
             //holder.status.setText("Status: "+ statuses.get(position));
@@ -236,7 +250,7 @@ public class HomeFrag extends Fragment {
                 productImage = itemView.findViewById(R.id.productimage);
                 orderNo = itemView.findViewById(R.id.orderid);
                 confirm_button= itemView.findViewById(R.id.confirmButton);
-                cancel_button = itemView.findViewById(R.id.cancelButton);
+              //  cancel_button = itemView.findViewById(R.id.cancelButton);
             }
         }
     }
