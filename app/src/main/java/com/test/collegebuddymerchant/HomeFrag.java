@@ -250,7 +250,7 @@ public class HomeFrag extends Fragment {
                 productImage = itemView.findViewById(R.id.productimage);
                 orderNo = itemView.findViewById(R.id.orderid);
                 confirm_button= itemView.findViewById(R.id.confirmButton);
-              //  cancel_button = itemView.findViewById(R.id.cancelButton);
+
             }
         }
     }
