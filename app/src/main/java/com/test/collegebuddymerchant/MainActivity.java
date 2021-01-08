@@ -66,9 +66,6 @@ public class MainActivity extends AppCompatActivity {
         ordersFrag=new OrdersFrag();
         profileFrag= new ProfileFrag();
         packedOrderFrag=new PackedOrderFrag();
-
-
-
         setFragment(homeFrag);
 
 

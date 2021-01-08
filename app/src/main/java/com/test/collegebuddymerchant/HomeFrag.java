@@ -13,6 +13,9 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +28,7 @@ import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
@@ -37,7 +41,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 
 
-public class HomeFrag extends Fragment {
+public class HomeFrag extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
     SharedPreferences details;
     private RecyclerView mRecyclerView;
     private LottieAnimationView tv_no_item;
@@ -50,6 +54,11 @@ public class HomeFrag extends Fragment {
     LottieAnimationView noData;
     String cityName,collegeName,loginId;
     DocumentReference stausref;
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    OrderAdapter myAdapter;
+    Handler handler;
+    private Runnable r;
+
 
 
 
@@ -58,7 +67,6 @@ public class HomeFrag extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v=inflater.inflate(R.layout.fragment_home, container, false);
-        Toast.makeText(getActivity(), "this is home fragment", Toast.LENGTH_SHORT).show();
         details = getActivity().getSharedPreferences("com.test.collegebuddymerchant", Context.MODE_PRIVATE);
         cityName = details.getString("cityName","");
         collegeName = details.getString("collegeName","");
@@ -67,17 +75,43 @@ public class HomeFrag extends Fragment {
         tv_no_item = v.findViewById(R.id.tv_no_cards);
         noData =  v.findViewById(R.id.no_data);
         stausref = db.collection(cityName).document(collegeName);
-//        if (mRecyclerView != null) {
-//            //to enable optimization of recyclerview
-//
-//        }
-        mRecyclerView.setHasFixedSize(true);
+        if (mRecyclerView != null) {
+            //to enable optimization of recyclerview
+            mRecyclerView.setHasFixedSize(true);
+        }
+        noData.setVisibility(View.GONE);
         lastDocumentSnapshot=null;
         manager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(manager);
-        OrderAdapter myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
+        myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
         mRecyclerView.setAdapter(myAdapter);
-        LoadData();
+        mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.authui_colorPrimaryDark,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+        mSwipeRefreshLayout.post(new Runnable() {
+            @Override
+            public void run() {
+
+                mSwipeRefreshLayout.setRefreshing(true);
+                LoadData();
+                // Fetching data from server
+            }
+        });
+        handler = new Handler();
+        r = new Runnable() {
+            public void run() {
+                handler.postDelayed(this, 10000);
+                lastDocumentSnapshot =null;
+                myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
+                mRecyclerView.setAdapter(myAdapter);
+                onRefresh();
+            }
+        };
+
+        handler.postDelayed(r, 10000);
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -102,10 +136,11 @@ public class HomeFrag extends Fragment {
     }
 
     private void LoadData() {
+        mSwipeRefreshLayout.setRefreshing(true);
         if(lastDocumentSnapshot == null){
-            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("merchentId",loginId).limit(10);
+            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Order received").limit(10);
         }else{
-            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("merchentId",loginId).startAfter(lastDocumentSnapshot).limit(10);
+            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Order received").startAfter(lastDocumentSnapshot).limit(10);
         }
         query.get().addOnSuccessListener(getActivity(), new OnSuccessListener<QuerySnapshot>() {
             @Override
@@ -114,13 +149,14 @@ public class HomeFrag extends Fragment {
                     if (tv_no_item.getVisibility() == View.VISIBLE) {
                         tv_no_item.setVisibility(View.GONE);
                     }
-                    noData.setVisibility(View.VISIBLE);
+                    noData.setVisibility(View.GONE);
                 }
                 for(QueryDocumentSnapshot documentSnapshot: queryDocumentSnapshots){
                     lastDocumentSnapshot = documentSnapshot;
                     if (tv_no_item.getVisibility() == View.VISIBLE) {
                         tv_no_item.setVisibility(View.GONE);
                     }
+                    noData.setVisibility(View.GONE);
                     String key = documentSnapshot.getId();
                     noData.setVisibility(View.GONE);
                     String productName = documentSnapshot.getString("productName");
@@ -132,12 +168,25 @@ public class HomeFrag extends Fragment {
                     String productImage = documentSnapshot.getString("productImage");
                     String orderId = documentSnapshot.getString("orderId");
                     ((OrderAdapter)mRecyclerView.getAdapter()).update(key,productName,quantity,status,price,mrp,discount,productImage, orderId);
-                    Log.e("details",productName+quantity+price);
 
                     //quantity-copies,
                 }
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }).addOnFailureListener(getActivity(), new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                mSwipeRefreshLayout.setRefreshing(false);
             }
         });
+    }
+
+    @Override
+    public void onRefresh() {
+        lastDocumentSnapshot =null;
+        myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
+        mRecyclerView.setAdapter(myAdapter);
+        LoadData();
     }
 
     private class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder>{
@@ -164,7 +213,6 @@ public class HomeFrag extends Fragment {
             productImages.add(productImage);
             orderIds.add(orderId);
             notifyDataSetChanged();  //refershes the recyler view automatically...
-            Log.e("details2",productName+quantity+price);
 
         }
 
@@ -221,11 +269,7 @@ public class HomeFrag extends Fragment {
 
                 }
             });
-            //holder.status.setText("Status: "+ statuses.get(position));
-            //holder.price.setText("Rs. "+prices.get(position));
-            //holder.mrp.setText(mrps.get(position));
-            //holder.discount.setText(discounts.get(position)+"% off");
-            //holder.orderNo.setText(orderIds.get(position));
+
         }
 
         @Override
@@ -255,5 +299,18 @@ public class HomeFrag extends Fragment {
         }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            handler.removeCallbacks(r);
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+            r = null;
 
+        }catch (Exception e){
+            Log.e("ThreadUtil:","Error:"+e.toString());
+
+        }
+    }
 }
