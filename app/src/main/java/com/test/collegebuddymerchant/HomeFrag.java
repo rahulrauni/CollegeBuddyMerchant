@@ -138,9 +138,9 @@ public class HomeFrag extends Fragment implements SwipeRefreshLayout.OnRefreshLi
     private void LoadData() {
         mSwipeRefreshLayout.setRefreshing(true);
         if(lastDocumentSnapshot == null){
-            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Order received").limit(10);
+            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Placed").limit(10);
         }else{
-            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Order received").startAfter(lastDocumentSnapshot).limit(10);
+            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Placed").startAfter(lastDocumentSnapshot).limit(10);
         }
         query.get().addOnSuccessListener(getActivity(), new OnSuccessListener<QuerySnapshot>() {
             @Override
