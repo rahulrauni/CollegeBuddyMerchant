@@ -11,7 +11,10 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +26,7 @@ import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
@@ -35,7 +39,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 
 
-public class PackedOrderFrag extends Fragment {
+public class PackedOrderFrag extends Fragment implements SwipeRefreshLayout.OnRefreshListener{
 
     SharedPreferences details;
     private RecyclerView mRecyclerView;
@@ -49,7 +53,8 @@ public class PackedOrderFrag extends Fragment {
     LottieAnimationView noData;
     String cityName,collegeName,loginId;
     DocumentReference stausref;
-
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    OrderAdapter myAdapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -72,9 +77,25 @@ public class PackedOrderFrag extends Fragment {
         lastDocumentSnapshot=null;
         manager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(manager);
-        OrderAdapter myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
+         myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
         mRecyclerView.setAdapter(myAdapter);
-        LoadData();
+        mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.authui_colorPrimaryDark,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+        mSwipeRefreshLayout.post(new Runnable() {
+            @Override
+            public void run() {
+
+                mSwipeRefreshLayout.setRefreshing(true);
+                LoadData();
+                // Fetching data from server
+            }
+        });
+
+
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -98,10 +119,11 @@ public class PackedOrderFrag extends Fragment {
         return v;
     }
     private void LoadData() {
+        mSwipeRefreshLayout.setRefreshing(true);
         if(lastDocumentSnapshot == null){
-            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Dispatched").limit(10);
+            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Packed").limit(10);
         }else{
-            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Dispatched").startAfter(lastDocumentSnapshot).limit(10);
+            query = db.collection(cityName).document(collegeName).collection("productOrders").whereEqualTo("status","Packed").startAfter(lastDocumentSnapshot).limit(10);
         }
         query.get().addOnSuccessListener(getActivity(), new OnSuccessListener<QuerySnapshot>() {
             @Override
@@ -131,8 +153,24 @@ public class PackedOrderFrag extends Fragment {
 
                     //quantity-copies,
                 }
+                mSwipeRefreshLayout.setRefreshing(false);
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                mSwipeRefreshLayout.setRefreshing(false);
+
             }
         });
+    }
+
+    @Override
+    public void onRefresh() {
+        lastDocumentSnapshot =null;
+        myAdapter= new OrderAdapter(mRecyclerView,getContext(),new ArrayList<String>(),new ArrayList<String>(),new ArrayList<String>() , new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>(),new ArrayList<String>(), new ArrayList<String>());
+        mRecyclerView.setAdapter(myAdapter);
+        LoadData();
     }
 
     private class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder>{
@@ -216,6 +254,12 @@ public class PackedOrderFrag extends Fragment {
                 //  cancel_button = itemView.findViewById(R.id.cancelButton);
             }
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
     }
 
 }

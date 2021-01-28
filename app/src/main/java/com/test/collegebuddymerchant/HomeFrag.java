@@ -251,7 +251,7 @@ public class HomeFrag extends Fragment implements SwipeRefreshLayout.OnRefreshLi
                             setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    stausref.collection("productOrders").document(productKeys.get(position)).update("status","Dispatched")
+                                    stausref.collection("productOrders").document(productKeys.get(position)).update("status","Packed")
                                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                                 @Override
                                                 public void onComplete(@NonNull Task<Void> task) {
